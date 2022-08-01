@@ -7,9 +7,10 @@ exports.handler = function(context, event, callback) {
   {
     "fields": {
       "phone": event.phone,
-      "survey_num": parseInt(event.survey_num),
+      "survey_id": event.survey_id,
       "question_num": parseInt(event.question_num),
-      "user_choice": parseInt(event.user_choice)
+      "user_choice": parseInt(event.user_choice),
+      "status": parseInt(event.status)
     }
   }
   ], function(err, records){

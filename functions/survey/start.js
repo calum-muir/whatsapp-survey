@@ -26,7 +26,7 @@ exports.handler = function(context, event, callback) {
             client.studio.v2.flows(context.QUIZ_FLOW_SID)
                             .executions
                             .create({parameters: {
-                                survey_num: event.survey_num
+                                survey_id: event.survey_id
                              }, to: toNumber, from: fromNumber})
                             .then(execution => callback(null, execution.sid));
         })}
