@@ -19,14 +19,14 @@ exports.handler = function(context, event, callback) {
             let fromNumber = context.QUIZ_PHONE_NUMBER
             const toNumber = user.fields.phone
 
-            if (isWhatsapp(toNumber)) {
-                fromNumber = `whatsapp:${context.QUIZ_PHONE_NUMBER}`
-            }
+            // if (isWhatsapp(toNumber)) {
+            //     fromNumber = `whatsapp:${context.QUIZ_PHONE_NUMBER}`
+            // }
 
             client.studio.v2.flows(context.QUIZ_FLOW_SID)
                             .executions
                             .create({parameters: {
-                                quiz_num: event.quiz_num
+                                survey_num: event.survey_num
                              }, to: toNumber, from: fromNumber})
                             .then(execution => callback(null, execution.sid));
         })}

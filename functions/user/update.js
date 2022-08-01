@@ -8,7 +8,6 @@ exports.handler = function(context, event, callback) {
     .then(results => {
         user = results.filter(result => result.fields.phone == event.phone)
         if(user.length > 0){
-            user[0].fields.total_points += 1
             base(context.USER_TABLE_NAME).update([
               {
                 "id": user[0].id,
@@ -21,8 +20,7 @@ exports.handler = function(context, event, callback) {
               }
               records.forEach(function(record) {
                 callback(null, {"name": record.fields.name, 
-                    "phone": record.fields.phone, 
-                    "points": record.fields.total_points})
+                    "phone": record.fields.phone})
               });
             });
         }

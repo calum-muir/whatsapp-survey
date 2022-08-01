@@ -7,7 +7,6 @@ exports.handler = function(context, event, callback) {
     "fields": {
       "phone": event.phone,
       "name": event.name,
-      "total_points": 0,
       "status": "progress"
     }
   }

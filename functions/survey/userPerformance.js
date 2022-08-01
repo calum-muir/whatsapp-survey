@@ -20,14 +20,14 @@ exports.handler = function(context, event, callback) {
       let answers = []
       let userChoices = []
       events.forEach((event) => {
-        userChoices.push({questionNum: event.fields.question_num, quizNum: event.fields.quiz_num, userChoice: event.fields.user_choice})
+        userChoices.push({questionNum: event.fields.question_num, surveyNum: event.fields.survey_num, userChoice: event.fields.user_choice})
         promises.push(getQuestion(context.QUESTIONS_TABLE_NAME, base, event))
       })
       Promise.allSettled(promises)
         .then((questions) => {
           questions.forEach((question) => {
             if(question.value){
-              let yourAnswer = userChoices.filter((choice) => (choice.questionNum == question.value.question_num && choice.quizNum == question.value.quiz_num))[0].userChoice
+              let yourAnswer = userChoices.filter((choice) => (choice.questionNum == question.value.question_num && choice.surveyNum == question.value.survey_num))[0].userChoice
               let rightAnswer = question.value.answer
               answers.push({
                 "question": question.value.question, 
