@@ -1,0 +1,200 @@
+{
+  "description": "A New Flow",
+  "states": [
+    {
+      "name": "Trigger",
+      "type": "trigger",
+      "transitions": [
+        {
+          "next": "check_if_user_exists",
+          "event": "incomingMessage"
+        },
+        {
+          "event": "incomingCall"
+        },
+        {
+          "event": "incomingConversationMessage"
+        },
+        {
+          "next": "run_subflow_1",
+          "event": "incomingRequest"
+        },
+        {
+          "event": "incomingParent"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "name": "create_user",
+      "type": "run-function",
+      "transitions": [
+        {
+          "next": "send_successful_registration_message",
+          "event": "success"
+        },
+        {
+          "event": "fail"
+        }
+      ],
+      "properties": {
+        "service_sid": "ZS0ee2abda1cc7f909d6a7b06afe2020ee",
+        "environment_sid": "ZEf9a7bb1c42efc2b0911a406f67801035",
+        "offset": {
+          "x": 520,
+          "y": 1060
+        },
+        "function_sid": "ZHea30d058607cb522e674b3f245459292",
+        "parameters": [
+          {
+            "value": "{{trigger.message.From}}",
+            "key": "phone"
+          },
+          {
+            "value": "{{widgets.ask_for_name.inbound.Body}}",
+            "key": "name"
+          }
+        ],
+        "url": "https://waquiz-7645-dev.twil.io/user/add"
+      }
+    },
+    {
+      "name": "ask_for_name",
+      "type": "send-and-wait-for-reply",
+      "transitions": [
+        {
+          "next": "create_user",
+          "event": "incomingMessage"
+        },
+        {
+          "event": "timeout"
+        },
+        {
+          "event": "deliveryFailure"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 450,
+          "y": 730
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "body": "Looks like you haven't registered yet. Before starting we'll need the name of your quiz alter ego - feel free to get creative!",
+        "timeout": "36000"
+      }
+    },
+    {
+      "name": "send_successful_registration_message",
+      "type": "send-message",
+      "transitions": [
+        {
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 310,
+          "y": 1400
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "Awesome meeting you {{widgets.ask_for_name.inbound.Body}} ! Now let's do some quizzing!"
+      }
+    },
+    {
+      "name": "check_if_user_exists",
+      "type": "run-function",
+      "transitions": [
+        {
+          "next": "send_already_registered_message",
+          "event": "success"
+        },
+        {
+          "next": "ask_for_name",
+          "event": "fail"
+        }
+      ],
+      "properties": {
+        "service_sid": "ZS0ee2abda1cc7f909d6a7b06afe2020ee",
+        "environment_sid": "ZEf9a7bb1c42efc2b0911a406f67801035",
+        "offset": {
+          "x": 140,
+          "y": 510
+        },
+        "function_sid": "ZHdb42f3402d2e3a3f205ed37c65858ccd",
+        "parameters": [
+          {
+            "value": "{{trigger.message.From}}",
+            "key": "phone"
+          }
+        ],
+        "url": "https://waquiz-7645-dev.twil.io/user/find"
+      }
+    },
+    {
+      "name": "send_already_registered_message",
+      "type": "send-message",
+      "transitions": [
+        {
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -270,
+          "y": 910
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "Hey {{widgets.check_if_user_exists.parsed.name}} , you're already registered! We'll send you a message next time a quiz starts! In the meantime you can check the leaderboard out here: https://waquiz-7645-dev.twil.io/index.html"
+      }
+    },
+    {
+      "name": "run_subflow_1",
+      "type": "run-subflow",
+      "transitions": [
+        {
+          "event": "completed"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "flow_sid": "FW4ce8526423262d6411c1a2d9d4de3679",
+        "flow_revision": "LatestPublished",
+        "offset": {
+          "x": 500,
+          "y": 320
+        },
+        "parameters": [
+          {
+            "value": "{{flow.data.quiz_num}}",
+            "key": "quiz_num"
+          }
+        ]
+      }
+    }
+  ],
+  "initial_state": "Trigger",
+  "flags": {
+    "allow_concurrent_calls": true
+  }
+}
