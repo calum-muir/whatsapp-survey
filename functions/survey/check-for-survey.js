@@ -18,6 +18,7 @@ exports.handler = function(context, event, callback) {
       else {
         const surveyObject = {}
         surveyObject.surveyId = ""
+        surveyObject.surveyDescription = ""
         surveyObject.start = "false"
         base(context.SURVEY_DETAILS_TABLE_NAME).select({
             view: 'Grid view'
@@ -25,7 +26,9 @@ exports.handler = function(context, event, callback) {
             if (err) { console.error(err); callback(err); }
             records.forEach((record) => {
                 console.log('Retrieved', record.get('survey_id'));
-                surveyObject.surveyId += checkMessageForSurveyId(event.message, record)
+                surveyDetails = checkMessageForSurveyId(event.message, record)
+                surveyObject.surveyId += surveyDetails.surveyId
+                surveyObject.surveyDescription += surveyDetails.surveyDescription
             });
             
             if (surveyObject.surveyId) {
@@ -40,9 +43,15 @@ exports.handler = function(context, event, callback) {
 
 const checkMessageForSurveyId = (message, survey) => {
    const words = message.split(" ")
+   const surveyDetails = {}
+   surveyDetails.surveyId = ""
+   surveyDetails.surveyDescription = ""
    if (words.find(word => word.toLowerCase() == survey.get('survey_id').toLowerCase())) {
-        return survey.get('survey_id')
+        
+        surveyDetails.surveyId = survey.get('survey_id')
+        surveyDetails.surveyDescription = survey.get('survey_description')
+        return surveyDetails
    } else {
-    return ""
+    return surveyDetails
    }
 }
