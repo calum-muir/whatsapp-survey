@@ -16,7 +16,7 @@
           "event": "incomingConversationMessage"
         },
         {
-          "next": "run_subflow_1",
+          "next": "register-user-with-quiz",
           "event": "incomingRequest"
         },
         {
@@ -43,13 +43,13 @@
         }
       ],
       "properties": {
-        "service_sid": "ZS0ee2abda1cc7f909d6a7b06afe2020ee",
-        "environment_sid": "ZEf9a7bb1c42efc2b0911a406f67801035",
+        "service_sid": "ZSf5c8db41ee4e937d51110433def36ae2",
+        "environment_sid": "ZE7695435fcbbe9cda3b747b82388c55bb",
         "offset": {
           "x": 520,
           "y": 1060
         },
-        "function_sid": "ZHea30d058607cb522e674b3f245459292",
+        "function_sid": "ZH7966ac5a15310ea60aa470e87f5444a6",
         "parameters": [
           {
             "value": "{{trigger.message.From}}",
@@ -60,7 +60,7 @@
             "key": "name"
           }
         ],
-        "url": "https://waquiz-7645-dev.twil.io/user/add"
+        "url": "https://wa-survey-4471-dev.twil.io/user/add"
       }
     },
     {
@@ -86,7 +86,7 @@
         "service": "{{trigger.message.InstanceSid}}",
         "channel": "{{trigger.message.ChannelSid}}",
         "from": "{{flow.channel.address}}",
-        "body": "Looks like you haven't registered yet. Before starting we'll need the name of your quiz alter ego - feel free to get creative!",
+        "body": "Looks like you haven't registered yet. Before starting we'll need to collect some details.\n\nWhat is your name?",
         "timeout": "36000"
       }
     },
@@ -110,7 +110,7 @@
         "channel": "{{trigger.message.ChannelSid}}",
         "from": "{{flow.channel.address}}",
         "to": "{{contact.channel.address}}",
-        "body": "Awesome meeting you {{widgets.ask_for_name.inbound.Body}} ! Now let's do some quizzing!"
+        "body": "Awesome meeting you {{widgets.ask_for_name.inbound.Body}}! We'll periodically push available surveys to you!"
       }
     },
     {
@@ -118,7 +118,7 @@
       "type": "run-function",
       "transitions": [
         {
-          "next": "send_already_registered_message",
+          "next": "check_survey_start",
           "event": "success"
         },
         {
@@ -127,24 +127,24 @@
         }
       ],
       "properties": {
-        "service_sid": "ZS0ee2abda1cc7f909d6a7b06afe2020ee",
-        "environment_sid": "ZEf9a7bb1c42efc2b0911a406f67801035",
+        "service_sid": "ZSf5c8db41ee4e937d51110433def36ae2",
+        "environment_sid": "ZE7695435fcbbe9cda3b747b82388c55bb",
         "offset": {
-          "x": 140,
-          "y": 510
+          "x": 110,
+          "y": 320
         },
-        "function_sid": "ZHdb42f3402d2e3a3f205ed37c65858ccd",
+        "function_sid": "ZHac3a8ceddde50196dd2d497971cf0e35",
         "parameters": [
           {
             "value": "{{trigger.message.From}}",
             "key": "phone"
           }
         ],
-        "url": "https://waquiz-7645-dev.twil.io/user/find"
+        "url": "https://wa-survey-4471-dev.twil.io/user/find"
       }
     },
     {
-      "name": "send_already_registered_message",
+      "name": "send_available_surveys",
       "type": "send-message",
       "transitions": [
         {
@@ -156,14 +156,14 @@
       ],
       "properties": {
         "offset": {
-          "x": -270,
-          "y": 910
+          "x": -150,
+          "y": 1830
         },
         "service": "{{trigger.message.InstanceSid}}",
         "channel": "{{trigger.message.ChannelSid}}",
         "from": "{{flow.channel.address}}",
         "to": "{{contact.channel.address}}",
-        "body": "Hey {{widgets.check_if_user_exists.parsed.name}} , you're already registered! We'll send you a message next time a quiz starts! In the meantime you can check the leaderboard out here: https://waquiz-7645-dev.twil.io/index.html"
+        "body": "Hey {{widgets.check_if_user_exists.parsed.name}}, here is a list of the surveys you can take. To take a survey simply reply with the id of the survey you'd like to take:\n\n{{widgets.available_surveys.parsed.message}}"
       }
     },
     {
@@ -178,18 +178,246 @@
         }
       ],
       "properties": {
-        "flow_sid": "FW4ce8526423262d6411c1a2d9d4de3679",
+        "flow_sid": "FW1fad8408a852907b7fd202596c6e5b5e",
         "flow_revision": "LatestPublished",
         "offset": {
-          "x": 500,
-          "y": 320
+          "x": 1130,
+          "y": 880
         },
         "parameters": [
           {
-            "value": "{{flow.data.quiz_num}}",
-            "key": "quiz_num"
+            "value": "{{flow.data.survey_id}}",
+            "key": "survey_id"
+          },
+          {
+            "value": "false",
+            "key": "inbound"
           }
         ]
+      }
+    },
+    {
+      "name": "check_survey_start",
+      "type": "run-function",
+      "transitions": [
+        {
+          "next": "split_1",
+          "event": "success"
+        },
+        {
+          "event": "fail"
+        }
+      ],
+      "properties": {
+        "service_sid": "ZSf5c8db41ee4e937d51110433def36ae2",
+        "environment_sid": "ZE7695435fcbbe9cda3b747b82388c55bb",
+        "offset": {
+          "x": -340,
+          "y": 810
+        },
+        "function_sid": "ZHa563468f27dfe852c113dc0c8adc1d54",
+        "parameters": [
+          {
+            "value": "{{trigger.message.From}}",
+            "key": "phone"
+          },
+          {
+            "value": "{{trigger.message.Body}}",
+            "key": "message"
+          }
+        ],
+        "url": "https://wa-survey-4471-dev.twil.io/survey/check-for-survey"
+      }
+    },
+    {
+      "name": "split_1",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "start_survey_message",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "If value equal_to true",
+              "arguments": [
+                "{{widgets.check_survey_start.parsed.start}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "available_surveys",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "If value equal_to false",
+              "arguments": [
+                "{{widgets.check_survey_start.parsed.start}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.check_survey_start.parsed.start}}",
+        "offset": {
+          "x": -570,
+          "y": 1140
+        }
+      }
+    },
+    {
+      "name": "start_survey_message",
+      "type": "send-message",
+      "transitions": [
+        {
+          "next": "start_survey",
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -700,
+          "y": 1570
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "Great! We'll send out the \"{{widgets.check_survey_start.parsed.surveyDescription}}\" survey shortly!"
+      }
+    },
+    {
+      "name": "available_surveys",
+      "type": "run-function",
+      "transitions": [
+        {
+          "next": "send_available_surveys",
+          "event": "success"
+        },
+        {
+          "event": "fail"
+        }
+      ],
+      "properties": {
+        "service_sid": "ZSf5c8db41ee4e937d51110433def36ae2",
+        "environment_sid": "ZE7695435fcbbe9cda3b747b82388c55bb",
+        "offset": {
+          "x": -170,
+          "y": 1500
+        },
+        "function_sid": "ZH827c44dfb8a2bfaa74146f468f9dc495",
+        "parameters": [
+          {
+            "value": "{{trigger.message.From}}",
+            "key": "phone"
+          }
+        ],
+        "url": "https://wa-survey-4471-dev.twil.io/survey/available-surveys"
+      }
+    },
+    {
+      "name": "start_survey",
+      "type": "run-subflow",
+      "transitions": [
+        {
+          "event": "completed"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "flow_sid": "FW1fad8408a852907b7fd202596c6e5b5e",
+        "flow_revision": "LatestPublished",
+        "offset": {
+          "x": -820,
+          "y": 1970
+        },
+        "parameters": [
+          {
+            "value": "{{widgets.check_survey_start.parsed.surveyId}}",
+            "key": "survey_id"
+          },
+          {
+            "value": "true",
+            "key": "inbound"
+          },
+          {
+            "value": "{{trigger.message.From}}",
+            "key": "phone"
+          }
+        ]
+      }
+    },
+    {
+      "name": "send_message_1",
+      "type": "send-message",
+      "transitions": [
+        {
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 780,
+          "y": 620
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "{{flow.data.message}}"
+      }
+    },
+    {
+      "name": "register-user-with-quiz",
+      "type": "run-function",
+      "transitions": [
+        {
+          "next": "send_message_1",
+          "event": "success"
+        },
+        {
+          "event": "fail"
+        }
+      ],
+      "properties": {
+        "service_sid": "ZSf5c8db41ee4e937d51110433def36ae2",
+        "environment_sid": "ZE7695435fcbbe9cda3b747b82388c55bb",
+        "offset": {
+          "x": 620,
+          "y": 310
+        },
+        "function_sid": "ZHebaffe57cd985ede8e7b70d5e98a2861",
+        "parameters": [
+          {
+            "value": "{{trigger.request.to}}",
+            "key": "phone"
+          },
+          {
+            "value": "{{flow.data.survey_id}}",
+            "key": "survey_id"
+          },
+          {
+            "value": "0",
+            "key": "status"
+          }
+        ],
+        "url": "https://wa-survey-4471-dev.twil.io/survey/update-survey-status"
       }
     }
   ],

@@ -1,0 +1,519 @@
+{
+  "description": "A New Flow",
+  "states": [
+    {
+      "name": "Trigger",
+      "type": "trigger",
+      "transitions": [
+        {
+          "event": "incomingMessage"
+        },
+        {
+          "event": "incomingCall"
+        },
+        {
+          "event": "incomingConversationMessage"
+        },
+        {
+          "event": "incomingRequest"
+        },
+        {
+          "next": "set_variables_1",
+          "event": "incomingParent"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "name": "update_question_num",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "fetch_question",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "{{flow.variables.questionNum | plus: 1}}",
+            "key": "questionNum"
+          }
+        ],
+        "offset": {
+          "x": 1150,
+          "y": 2710
+        }
+      }
+    },
+    {
+      "name": "set_variables_1",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "split_1",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "1",
+            "key": "questionNum"
+          },
+          {
+            "value": "{{trigger.parent.parameters.survey_id}}",
+            "key": "surveyId"
+          }
+        ],
+        "offset": {
+          "x": 310,
+          "y": 290
+        }
+      }
+    },
+    {
+      "name": "fetch_question",
+      "type": "run-function",
+      "transitions": [
+        {
+          "next": "ask_question",
+          "event": "success"
+        },
+        {
+          "next": "update_survey_status_completed",
+          "event": "fail"
+        }
+      ],
+      "properties": {
+        "service_sid": "ZSf5c8db41ee4e937d51110433def36ae2",
+        "environment_sid": "ZE7695435fcbbe9cda3b747b82388c55bb",
+        "offset": {
+          "x": 30,
+          "y": 1550
+        },
+        "function_sid": "ZH4e1ddfbdf163acbde2d25791894a85b6",
+        "parameters": [
+          {
+            "value": "{{flow.variables.surveyId}}",
+            "key": "survey_id"
+          },
+          {
+            "value": "{{flow.variables.questionNum}}",
+            "key": "question_num"
+          }
+        ],
+        "url": "https://wa-survey-4471-dev.twil.io/survey/survey"
+      }
+    },
+    {
+      "name": "ask_question",
+      "type": "send-and-wait-for-reply",
+      "transitions": [
+        {
+          "next": "check_if_matches_choice",
+          "event": "incomingMessage"
+        },
+        {
+          "event": "timeout"
+        },
+        {
+          "event": "deliveryFailure"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 1160,
+          "y": 1280
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "body": "{{widgets.fetch_question.parsed.question}}",
+        "timeout": "36000"
+      }
+    },
+    {
+      "name": "send_completed_quiz_message",
+      "type": "send-message",
+      "transitions": [
+        {
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 50,
+          "y": 2740
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "That's the end of the survey. If you want to take part in some more, here is a list of surveys you can still complete:\n\n{{widgets.available_surveys.parsed.message}}"
+      }
+    },
+    {
+      "name": "send_message_1",
+      "type": "send-message",
+      "transitions": [
+        {
+          "next": "ask_question",
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 1160,
+          "y": 990
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "Please answer using the buttons!"
+      }
+    },
+    {
+      "name": "check_if_matches_choice",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "split_2",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "{% if widgets.ask_question.inbound.Body == widgets.fetch_question.parsed.choice_1 or widgets.ask_question.inbound.Body == widgets.fetch_question.parsed.choice_2 or widgets.ask_question.inbound.Body == widgets.fetch_question.parsed.choice_3%} true {% endif %}",
+            "key": "matches_choices"
+          }
+        ],
+        "offset": {
+          "x": 1890,
+          "y": 1460
+        }
+      }
+    },
+    {
+      "name": "split_2",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "send_message_1",
+          "event": "noMatch"
+        },
+        {
+          "next": "update_survey_status",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "If value equal_to true",
+              "arguments": [
+                "{{flow.variables.matches_choices}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.matches_choices}}",
+        "offset": {
+          "x": 1840,
+          "y": 1740
+        }
+      }
+    },
+    {
+      "name": "recording_answer_correct",
+      "type": "run-function",
+      "transitions": [
+        {
+          "next": "update_question_num",
+          "event": "success"
+        },
+        {
+          "event": "fail"
+        }
+      ],
+      "properties": {
+        "service_sid": "ZSf5c8db41ee4e937d51110433def36ae2",
+        "environment_sid": "ZE7695435fcbbe9cda3b747b82388c55bb",
+        "offset": {
+          "x": 1140,
+          "y": 2450
+        },
+        "function_sid": "ZH32f561c68a78279109b2aae080b758f1",
+        "parameters": [
+          {
+            "value": "{{flow.variables.phone}}",
+            "key": "phone"
+          },
+          {
+            "value": "{{flow.variables.surveyId}}",
+            "key": "survey_id"
+          },
+          {
+            "value": "{{flow.variables.questionNum}}",
+            "key": "question_num"
+          },
+          {
+            "value": "{{widgets.ask_question.inbound.Body}}",
+            "key": "user_choice"
+          },
+          {
+            "value": "{{flow.variables.questionNum}}",
+            "key": "status"
+          }
+        ],
+        "url": "https://wa-survey-4471-dev.twil.io/survey/events"
+      }
+    },
+    {
+      "name": "update_survey_status_completed",
+      "type": "run-function",
+      "transitions": [
+        {
+          "next": "available_surveys",
+          "event": "success"
+        },
+        {
+          "event": "fail"
+        }
+      ],
+      "properties": {
+        "service_sid": "ZSf5c8db41ee4e937d51110433def36ae2",
+        "environment_sid": "ZE7695435fcbbe9cda3b747b82388c55bb",
+        "offset": {
+          "x": 40,
+          "y": 1970
+        },
+        "function_sid": "ZHebaffe57cd985ede8e7b70d5e98a2861",
+        "parameters": [
+          {
+            "value": "{{flow.variables.phone}}",
+            "key": "phone"
+          },
+          {
+            "value": "{{flow.variables.surveyId}}",
+            "key": "survey_id"
+          },
+          {
+            "value": "-1",
+            "key": "status"
+          }
+        ],
+        "url": "https://wa-survey-4471-dev.twil.io/survey/update-survey-status"
+      }
+    },
+    {
+      "name": "update_survey_status_pushed",
+      "type": "run-function",
+      "transitions": [
+        {
+          "next": "fetch_question",
+          "event": "success"
+        },
+        {
+          "event": "fail"
+        }
+      ],
+      "properties": {
+        "service_sid": "ZSf5c8db41ee4e937d51110433def36ae2",
+        "environment_sid": "ZE7695435fcbbe9cda3b747b82388c55bb",
+        "offset": {
+          "x": 40,
+          "y": 1150
+        },
+        "function_sid": "ZHebaffe57cd985ede8e7b70d5e98a2861",
+        "parameters": [
+          {
+            "value": "{{flow.variables.phone}}",
+            "key": "phone"
+          },
+          {
+            "value": "{{flow.variables.surveyId}}",
+            "key": "survey_id"
+          },
+          {
+            "value": "0",
+            "key": "status"
+          }
+        ],
+        "url": "https://wa-survey-4471-dev.twil.io/survey/update-survey-status"
+      }
+    },
+    {
+      "name": "update_survey_status",
+      "type": "run-function",
+      "transitions": [
+        {
+          "next": "recording_answer_correct",
+          "event": "success"
+        },
+        {
+          "event": "fail"
+        }
+      ],
+      "properties": {
+        "service_sid": "ZSf5c8db41ee4e937d51110433def36ae2",
+        "environment_sid": "ZE7695435fcbbe9cda3b747b82388c55bb",
+        "offset": {
+          "x": 1420,
+          "y": 2130
+        },
+        "function_sid": "ZHebaffe57cd985ede8e7b70d5e98a2861",
+        "parameters": [
+          {
+            "value": "{{flow.variables.phone}}",
+            "key": "phone"
+          },
+          {
+            "value": "{{flow.variables.surveyId}}",
+            "key": "survey_id"
+          },
+          {
+            "value": "{{flow.variables.questionNum}}",
+            "key": "status"
+          }
+        ],
+        "url": "https://wa-survey-4471-dev.twil.io/survey/update-survey-status"
+      }
+    },
+    {
+      "name": "available_surveys",
+      "type": "run-function",
+      "transitions": [
+        {
+          "next": "send_completed_quiz_message",
+          "event": "success"
+        },
+        {
+          "event": "fail"
+        }
+      ],
+      "properties": {
+        "service_sid": "ZSf5c8db41ee4e937d51110433def36ae2",
+        "environment_sid": "ZE7695435fcbbe9cda3b747b82388c55bb",
+        "offset": {
+          "x": 40,
+          "y": 2290
+        },
+        "function_sid": "ZH827c44dfb8a2bfaa74146f468f9dc495",
+        "parameters": [
+          {
+            "value": "{{flow.variables.phone}}",
+            "key": "phone"
+          }
+        ],
+        "url": "https://wa-survey-4471-dev.twil.io/survey/available-surveys"
+      }
+    },
+    {
+      "name": "split_1",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "set_phone_inbound",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "If value equal_to true",
+              "arguments": [
+                "{{trigger.parent.parameters.inbound}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "set_phone_rest",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "If value equal_to false",
+              "arguments": [
+                "{{trigger.parent.parameters.inbound}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{trigger.parent.parameters.inbound}}",
+        "offset": {
+          "x": 180,
+          "y": 560
+        }
+      }
+    },
+    {
+      "name": "set_phone_rest",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "update_survey_status_pushed",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "{{trigger.request.to}}",
+            "key": "phone"
+          }
+        ],
+        "offset": {
+          "x": 620,
+          "y": 880
+        }
+      }
+    },
+    {
+      "name": "set_phone_inbound",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "update_survey_status_pushed",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "{{trigger.parent.parameters.phone}}",
+            "key": "phone"
+          }
+        ],
+        "offset": {
+          "x": -140,
+          "y": 880
+        }
+      }
+    }
+  ],
+  "initial_state": "Trigger",
+  "flags": {
+    "allow_concurrent_calls": true
+  }
+}

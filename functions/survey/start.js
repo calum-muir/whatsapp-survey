@@ -14,21 +14,28 @@ exports.handler = function(context, event, callback) {
     base(context.USER_TABLE_NAME).select().all()
     .then(users => {
         users.forEach(function(user){
-            console.log(user.fields.phone, " is the phone number")
-
             let fromNumber = context.QUIZ_PHONE_NUMBER
             const toNumber = user.fields.phone
 
-            // if (isWhatsapp(toNumber)) {
-            //     fromNumber = `whatsapp:${context.QUIZ_PHONE_NUMBER}`
-            // }
+            base(context.SURVEY_DETAILS_TABLE_NAME).select({
+                filterByFormula: `({survey_id} = "${event.survey_id}")`
+            }).firstPage((err, surveys) => {
+                if (err) { console.error(err); callback(err); }
 
-            client.studio.v2.flows(context.QUIZ_FLOW_SID)
-                            .executions
-                            .create({parameters: {
-                                survey_id: event.survey_id
-                             }, to: toNumber, from: fromNumber})
-                            .then(execution => callback(null, execution.sid));
+
+                const survey = surveys[0]
+                const tempMessage = `There's a new survey available for you! The \"${survey.get('survey_description')}\" survey takes about ${survey.get('time')} to complete and has a $${survey.get('reward')} reward. To take this survey reply with the following unique ID - ${survey.get('survey_id')}`
+
+                client.studio.v2.flows(context.QUIZ_FLOW_SID)
+                .executions
+                .create({parameters: {
+                    survey_id: event.survey_id,
+                    message: tempMessage
+                 }, to: toNumber, from: fromNumber})
+                .then(execution => callback(null, execution.sid));
+            });
+
+            
         })}
     )
     .catch(err => console.log(err))
