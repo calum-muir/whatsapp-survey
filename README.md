@@ -1,4 +1,4 @@
-# A Whatsapp quiz powered by Twilio
+# A Whatsapp Suvey Powered by Twilio
 
 ### What do you need
 1. Twilio Account
