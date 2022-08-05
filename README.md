@@ -33,9 +33,9 @@ Each Survey has an associated user and state which is stored within the Survey S
 
 The status part of this table denotes the survey state. Below is a description of each status
 
-0 - Shows that the user is able to take the survey but hasn't started
-Any Positive Integer - Shows the current question the user is on within the quiz
--1 - Indicates that the user has completed the survey and that it is no longer available for them to take
+- 0 - Shows that the user is able to take the survey but hasn't started \n
+- Any Positive Integer - Shows the current question the user is on within the quiz \n
+- 1 - Indicates that the user has completed the survey and that it is no longer available for them to take
 
 For users to be assigned a survey you can either directly enter this in airtable or you can "push" a survey to the user by using the "/survey/start" endpoint.
 
